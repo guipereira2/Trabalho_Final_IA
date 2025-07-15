@@ -135,7 +135,7 @@ def render() -> None:
 
     with st.form("rf_params"):
         data_dir = st.text_input("📂 Pasta do dataset `chest_xray/`",
-                                 value="data/chest_xray")
+                                 value="dashboard/data/pneumonia")
 
         col1, col2, col3 = st.columns(3)
         n_estimators = col1.slider("Árvores (`n_estimators`)", 50, 500, 200, 50)

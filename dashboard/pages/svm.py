@@ -108,7 +108,8 @@ def render() -> None:
     st.header("Configurações de treino")
 
     with st.form("svm_form"):
-        data_dir = st.text_input("📂 Pasta do dataset `chest_xray/`", "data/chest_xray")
+        data_dir = st.text_input("📂 Pasta do dataset `chest_xray/`",
+                                 value="dashboard/data/pneumonia")
 
         col1, col2, col3 = st.columns(3)
         kernel   = col1.selectbox("Kernel", ["linear", "rbf"], index=0)
