@@ -10,28 +10,6 @@ from keras.models import Sequential
 from keras.layers import Conv2D, MaxPooling2D, Dense, Dropout, Flatten
 from keras.optimizers import Adam
 
-import zipfile, tempfile, os, pathlib, shutil
-
-@st.cache_resource(show_spinner=False)
-def extract_zip(uploaded_zip) -> str:
-    """
-    Recebe um arquivo enviado pelo usuário (st.file_uploader),
-    extrai tudo em uma pasta temporária e devolve o caminho.
-    """
-    tmp_dir = tempfile.mkdtemp(prefix="cxray_")
-    zip_path = pathlib.Path(tmp_dir) / "dataset.zip"
-    zip_path.write_bytes(uploaded_zip.read())
-
-    with zipfile.ZipFile(zip_path) as zf:
-        zf.extractall(tmp_dir)
-
-    # tenta localizar a pasta que contém 'train/', 'test/' ou 'val/'
-    for root, dirs, _ in os.walk(tmp_dir):
-        if {"train", "test"}.issubset(set(dirs)):
-            return root   # encontrou a raiz correta
-
-    return tmp_dir  # fallback: devolve o diretório raiz temporário
-
 @st.cache_resource(show_spinner=False)
 def load_data(path: str, size: tuple[int, int] = (64, 64)):
     """Lê imagens (NORMAL / PNEUMONIA), redimensiona e normaliza."""
@@ -113,15 +91,9 @@ def render() -> None:
     with st.form("params"):
         st.subheader("Configurações de treino")
 
-        # 1️⃣ arquivo .zip (opcional)
-        uploaded = st.file_uploader(
-        "Enviar dataset compactado (.zip) – use a estrutura chest_xray/*",
-        type="zip"
-    )
+        data_dir = st.text_input("📂 Pasta do dataset `chest_xray/`",
+                                 value="dashboard/data/pneumonia")
 
-        # 2️⃣ caminho manual (continua disponível)
-        data_dir = st.text_input("📂 Pasta do dataset (opcional)", "")
-        
         col1, col2, col3 = st.columns(3)
         epochs   = col1.slider("Épocas", 1, 20, 10)
         batch    = col2.selectbox("Batch size", [16, 32, 64], index=1)
@@ -139,15 +111,9 @@ def render() -> None:
 
     # 3 Execução do treino ------------------------------------------------- #
     if submitted:
-    # Se o usuário enviou .zip, extraia primeiro
-        if uploaded is not None:
-            data_dir = extract_zip(uploaded)
-            st.success(f"Dataset extraído para {data_dir}")
-
-        # Validação
-        if not data_dir or not os.path.isdir(data_dir):
-            st.error("É necessário fornecer um dataset via upload ou caminho válido.")
-        st.stop()
+        if not os.path.isdir(data_dir):
+            st.error("Diretório inválido. Verifique o caminho.")
+            return
 
         X_train, X_test, y_train, y_test = load_data(data_dir)
         model = build_cnn(filters, kernel, dropout, lr)
