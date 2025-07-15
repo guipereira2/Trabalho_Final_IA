@@ -107,8 +107,13 @@ def render() -> None:
     with st.form("params"):
         st.subheader("Configurações de treino")
 
-        data_dir = st.text_input("📂 Pasta do dataset `chest_xray/`",
-                                 value="data/chest_xray")
+    data_dir = st.text_input("📂 Pasta do dataset", value="data/chest_xray")
+    if not os.path.isdir(data_dir):
+        st.warning("Dataset não encontrado; clique abaixo para baixar.")
+        if st.button("⬇️ Baixar automaticamente (≈100 MB)"):
+            data_dir = fetch_dataset()
+            st.success("Dataset pronto! Continue ajustando os parâmetros.")
+      
 
         col1, col2, col3 = st.columns(3)
         epochs   = col1.slider("Épocas", 1, 20, 10)
