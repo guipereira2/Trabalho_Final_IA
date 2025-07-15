@@ -10,6 +10,22 @@ from keras.models import Sequential
 from keras.layers import Conv2D, MaxPooling2D, Dense, Dropout, Flatten
 from keras.optimizers import Adam
 
+import zipfile, urllib.request, pathlib
+
+@st.cache_resource(show_spinner=True)
+def fetch_dataset() -> str:
+    """Baixa e extrai o dataset em ~/.cache/chest_xray se ele não existir."""
+    target = pathlib.Path.home() / ".cache" / "chest_xray"
+    if target.exists():
+        return str(target)
+    url = ("https://huggingface.co/datasets/GMorais/"
+           "mini_chest_xray/resolve/main/mini_chest_xray.zip")
+    zip_path = target.with_suffix(".zip")
+    urllib.request.urlretrieve(url, zip_path)
+    zipfile.ZipFile(zip_path).extractall(target)
+    zip_path.unlink()            # remove o .zip
+    return str(target)
+
 @st.cache_resource(show_spinner=False)
 def load_data(path: str, size: tuple[int, int] = (64, 64)):
     """Lê imagens (NORMAL / PNEUMONIA), redimensiona e normaliza."""
